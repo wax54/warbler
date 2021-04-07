@@ -1,0 +1,13 @@
+{% extends 'users/detail.html' %}
+{% block user_details %}
+<div class="col-sm-9">
+    <div class="row">
+
+        {% for msg in user.likes %}
+
+            {% include 'messages/card.html' %}
+        {% endfor %}
+
+    </div>
+</div>
+{% endblock %}

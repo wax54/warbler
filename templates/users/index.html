@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+  {% if users|length == 0 %}
+    <h3>Sorry, no users found</h3>
+  {% else %}
+    <div class="row justify-content-end">
+      <div class="col-sm-9">
+        <div class="row">
+
+          {% for other_user in users %}
+            {% include 'users/card.html' %}
+          {% endfor %}
+
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
