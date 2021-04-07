@@ -1,7 +1,7 @@
 """User model tests."""
 
 # run these tests like:
-# FLASK_ENV=production python -m unittest test_user_model.py
+# python -m unittest test_user_model.py
 
 
 import os

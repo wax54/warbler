@@ -38,7 +38,7 @@ class MessageViewTestCase(TestCase):
 
     def setUp(self):
         """Create test client, add sample data."""
-
+        
         User.query.delete()
         Message.query.delete()
 
@@ -52,7 +52,7 @@ class MessageViewTestCase(TestCase):
         db.session.commit()
 
     def test_add_message(self):
-        """Can use add a message?"""
+        """Can user add a message?"""
 
         # Since we need to change the session to mimic logging in,
         # we need to use the changing-session trick:
@@ -71,3 +71,94 @@ class MessageViewTestCase(TestCase):
 
             msg = Message.query.one()
             self.assertEqual(msg.text, "Hello")
+
+    def test_add_message_without_text(self):
+        """What happens if a user submits a blank message?"""
+
+        # Since we need to change the session to mimic logging in,
+        # we need to use the changing-session trick:
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            # Now, that session setting is saved, so we can have
+            # the rest of ours test
+            resp = c.post("/messages/new", data={"text": ""})
+
+            # Make sure you get the form page back
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn('>Add my message!</button>', html)
+
+    def test_show_message(self):
+        """Can user view a message?"""
+
+        # Since we need to change the session to mimic logging in,
+        # we need to use the changing-session trick:
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            m = Message(text="Test Message",
+                        user_id=self.testuser.id)
+            db.session.add(m)
+            db.session.commit()
+            resp = c.get(f"/messages/{m.id}")
+
+            # Make sure you get the form page back
+            self.assertEqual(resp.status_code, 200)
+
+            html = resp.get_data(as_text=True)
+            self.assertIn(f'>{m.text}</p>', html)
+
+    def test_delete_message(self):
+        """Can a user delete their message"""
+
+        # Since we need to change the session to mimic logging in,
+        # we need to use the changing-session trick:
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            m = Message(text="Test Message",
+                        user_id=self.testuser.id)
+            db.session.add(m)
+            db.session.commit()
+            # Now, that session setting is saved, so we can have
+            # the rest of ours test
+            resp = c.post(f"/messages/{m.id}/delete")
+
+            # redirects
+            self.assertEqual(resp.status_code, 302)
+
+            test_m = Message.query.get(m.id)
+            self.assertIsNone(test_m)
+
+    def test_unathorized_delete_message(self):
+        """Can a user delete another users message"""
+
+        # Since we need to change the session to mimic logging in,
+        # we need to use the changing-session trick:
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                #a different user is logged in
+                sess[CURR_USER_KEY] = self.testuser.id + 1
+
+            m = Message(text="Test Message",
+                        user_id=self.testuser.id)
+            db.session.add(m)
+            db.session.commit()
+            # Now, that session setting is saved, so we can have
+            # the rest of ours test
+            resp = c.post(f"/messages/{m.id}/delete")
+
+            # still redirects, but...
+            self.assertEqual(resp.status_code, 302)
+            # the message still exists
+            test_m = Message.query.get(m.id)
+            self.assertIsNotNone(test_m)

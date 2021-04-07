@@ -229,6 +229,10 @@ class Message(db.Model):
     )
 
     user = db.relationship('User')
+    
+    def __repr__(self):
+        return f"<Message #{self.id}: u_id={self.user_id}>"
+
 
 
 def connect_db(app):
