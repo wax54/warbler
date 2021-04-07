@@ -166,7 +166,6 @@ def show_following(user_id):
     return render_template('users/following.html', user=user)
 
 
-
 @app.route('/users/<int:user_id>/followers')
 def users_followers(user_id):
     """Show list of followers of this user."""
@@ -188,7 +187,7 @@ def show_likes(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    
+
     return render_template('users/liked_messages.html', user=user)
 
 
@@ -230,17 +229,17 @@ def profile():
         return redirect("/")
 
     form = UserEditForm(obj=g.user)
-    #form is valid?
+    # form is valid?
     if form.validate_on_submit():
-        #form has valid Pword?
+        # form has valid Pword?
         if User.authenticate(username=g.user.username, password=form.password.data):
-            
+
             g.user.update_from_serial(request.form)
             db.session.add(g.user)
             try:
                 db.session.commit()
-                return redirect(url_for("users_show",user_id=g.user.id))
-            
+                return redirect(url_for("users_show", user_id=g.user.id))
+
             except IntegrityError:
                 flash("Username or email already taken", 'danger')
                 return render_template('/users/edit.html', form=form)
@@ -272,7 +271,7 @@ def like_message(msg_id):
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
-    
+
     msg = Message.query.get_or_404(msg_id)
     if msg in g.user.likes:
         g.user.likes.remove(msg)
@@ -323,7 +322,7 @@ def messages_destroy(message_id):
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
-    
+
     msg = Message.query.get(message_id)
     if msg.user_id == g.user.id:
         db.session.delete(msg)
@@ -347,13 +346,13 @@ def homepage():
     """
 
     if g.user:
-        #an array of all the Id's of users who's messages should be shown
+        # an array of all the Id's of users who's messages should be shown
         following_ids = [glob[0] for glob in (db.session
-                        .query(Follows.user_being_followed_id)
-                        .filter(Follows.user_following_id == g.user.id)
-                        .all())]
+                                              .query(Follows.user_being_followed_id)
+                                              .filter(Follows.user_following_id == g.user.id)
+                                              .all())]
         following_ids.append(g.user.id)
-        
+
         messages = (Message
                     .query
                     .filter(Message.user_id.in_(following_ids))
