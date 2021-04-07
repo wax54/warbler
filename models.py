@@ -136,14 +136,15 @@ class User(db.Model):
         email = d.get('email')
         
         image_url = d.get('image_url')
-        if image_url is '':
+        if image_url == '':
             image_url = User.image_url.default.arg
             
         header_image_url = d.get('header_image_url')
-        if header_image_url is '':
+        if header_image_url == '':
             header_image_url = User.header_image_url.default.arg
             
         bio = d.get('bio')
+        location = d.get('location')
     
         if username:
             self.username = username
@@ -155,15 +156,8 @@ class User(db.Model):
             self.header_image_url = header_image_url
         if bio:
             self.bio = bio
-
-
-    def serialize(self):
-        return {'username': self.username,
-                'email': self.email,
-                'first_name': self.first_name,
-                'last_name': self.last_name
-                }
-
+        if location:
+            self.location = location
         
         
         

@@ -6,6 +6,7 @@
 
 import os
 from unittest import TestCase
+from sqlalchemy.exc import IntegrityError
 
 from models import db, User, Message, Follows
 
@@ -33,7 +34,7 @@ class UserModelTestCase(TestCase):
 
     def setUp(self):
         """Create test client, add sample data."""
-
+        db.session.rollback()
         User.query.delete()
         Message.query.delete()
         Follows.query.delete()
@@ -42,24 +43,6 @@ class UserModelTestCase(TestCase):
 
     def test_user_model(self):
         """Does basic model work?"""
-
-        u = User(
-            email="test@test.com",
-            username="testuser",
-            password="HASHED_PASSWORD"
-        )
-
-        db.session.add(u)
-        db.session.commit()
-
-        # User should have no messages & no followers
-        self.assertEqual(len(u.messages), 0)
-        self.assertEqual(len(u.followers), 0)
-        
-        # User should have Default image url
-        self.assertEqual(User.image_url.default.arg, u.image_url)
-
-    def test_user_model_attrs(self):
         u = User(
             email="test@test.com",
             username="testuser",
@@ -71,7 +54,22 @@ class UserModelTestCase(TestCase):
         )
         db.session.add(u)
         db.session.commit()
+
+        self.assertEqual(u.email, "test@test.com")
+        self.assertEqual(u.username, "testuser")
         self.assertEqual(u.bio, "Test Bio")
+        self.assertEqual(u.password, "HASHED_PASSWORD")
+        self.assertEqual(u.image_url, "www.someimage.com/1204194")
+        self.assertEqual(u.header_image_url, "www.someimage.com/131931")
+        self.assertEqual(u.location, "Washington")
+
+        # User should have no messages & no followers
+        self.assertEqual(len(u.messages), 0)
+        self.assertEqual(len(u.followers), 0)
+        self.assertEqual(len(u.following), 0)
+        self.assertEqual(len(u.likes), 0)
+
+
 
     def test_user_repr(self):
         u = User(
@@ -128,7 +126,7 @@ class UserModelTestCase(TestCase):
         u.followers.remove(u2)
         self.assertFalse(u.is_followed_by(u2))
 
-    def update_from_serial(self):
+    def test_update_from_serial(self):
         u = User(email="test@test.com",
                  username="testuser",
                  password="HASHED_PASSWORD",
@@ -157,5 +155,97 @@ class UserModelTestCase(TestCase):
         self.assertEqual(u.image_url, User.image_url.default.arg)
         #same thing for the header image
         self.assertEqual(u.header_image_url, User.header_image_url.default.arg)
-        self.assertEqual(u.bip, "Test Bio")
+        self.assertEqual(u.bio, "Test Bio")
         self.assertEqual(u.location, "Washington")
+
+    def test_duplicate_user_signup_failure(self):
+        u_info = {
+            "email": "test@test.com",
+            "username": "testuser",
+            "password": "PASSWORD",
+            "image_url": "https://www.SomeUrl.com/images0138"
+        }
+
+        u = User.signup(**u_info)
+        db.session.commit()
+        another_u = User.signup(**u_info)
+        #raises if email or username is not unique
+        self.assertRaises(IntegrityError, db.session.commit)
+
+    def test_no_username_signup_failure(self):
+        u_info = {
+            "email": "test@test.com",
+            "username": "",
+            "password": "PASSWORD",
+            "image_url": "https://www.SomeUrl.com/images0138"
+        }
+        #testing signup without a username
+        u = User.signup(**u_info)
+        db.session.commit()
+
+    def test_user_signup(self):
+        u_info = {
+            "email": "test@test.com",
+            "username": "testuser",
+            "password": "PASSWORD",
+            "image_url": "https://www.SomeUrl.com/images0138"
+        }
+        u_without_image_url_info = {
+            "email": "test2@test2.com",
+            "username": "testuser2",
+            "password": "PASSWORD",
+            "image_url": None
+        }
+
+        u = User.signup(**u_info)
+        db.session.commit()
+        #A new user is created
+        self.assertIsNotNone(u.id)
+        self.assertEqual(u.username, u_info['username'])
+        #Password is hashed
+        self.assertNotEqual(u.password, u_info['password'])
+        self.assertEqual(u.image_url, u_info['image_url'])
+
+        #test user with None for an image_url input
+        another_u = User.signup(**u_without_image_url_info)
+        db.session.commit()
+        self.assertEqual(another_u.username,
+                         u_without_image_url_info['username'])
+        self.assertEqual(another_u.image_url, User.image_url.default.arg)
+
+    def test_user_authenticate(self):
+        u_info = {
+            "email": "test@test.com",
+            "username": "testuser",
+            "password": "PASSWORD",
+            "image_url": "https://www.SomeUrl.com/images0138"
+        }
+        u_without_image_url_info = {
+            "email": "test2@test2.com",
+            "username": "testuser2",
+            "password": "PASSWORD",
+            "image_url": None
+        }
+
+        u = User.signup(**u_info)
+        db.session.commit()
+
+        # we a user back because we put in the correct credentials
+        authenticated_u = User.authenticate(
+            username=u_info['username'], password=u_info['password'])
+        self.assertEqual(u, authenticated_u)
+
+        # we get False back because we put in a username that doesn't exist
+        authenticated_u = User.authenticate(
+            username="someusername", password=u_info['password'])
+        self.assertFalse(authenticated_u)
+
+        # we get False back because we put in the wrong password
+        authenticated_u = User.authenticate(
+            username=u_info['username'], password="someotherpassword")
+        self.assertFalse(authenticated_u)
+
+        # we get False back because we put in the hashed password (which is then rehashed and does not match)
+        authenticated_u = User.authenticate(
+            username=u_info['username'], password=u.password)
+        self.assertFalse(authenticated_u)
