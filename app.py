@@ -41,10 +41,6 @@ app.register_blueprint(like_views)
 app.register_blueprint(auth_views)
 
 
-##############################################################################
-# User signup/login/logout
-
-
 @app.before_request
 def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
@@ -67,7 +63,6 @@ def homepage():
     - logged in: 100 most recent messages of followed_users
     """
 
-    print("##########################", g.user)
     if g.user:
         # an array of all the Id's of users who's messages should be shown
         following_ids = [glob[0] for glob in (db.session

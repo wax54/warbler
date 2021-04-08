@@ -1,10 +1,11 @@
-from flask import Blueprint, render_template, redirect, flash, g, request
+from flask import Blueprint, render_template, redirect, flash, g, request, url_for
 from db_setup import db
 from users.models import User
 from users.forms import UserEditForm
 
 from messages.models import Message
 
+from sqlalchemy.exc import IntegrityError
 
 user_views = Blueprint('user_routes', __name__)
 
@@ -134,7 +135,7 @@ def profile():
             db.session.add(g.user)
             try:
                 db.session.commit()
-                return redirect(url_for("users_show", user_id=g.user.id))
+                return redirect(url_for("user_routes.users_show", user_id=g.user.id))
 
             except IntegrityError:
                 flash("Username or email already taken", 'danger')

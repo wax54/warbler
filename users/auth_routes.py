@@ -11,6 +11,9 @@ CURR_USER_KEY = "curr_user"
 auth_views = Blueprint('authentication_routes', __name__)
 
 
+##############################################################################
+# User signup/login/logout
+
 def do_login(user):
     """Log in user."""
 
