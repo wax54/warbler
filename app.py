@@ -198,7 +198,9 @@ def add_follow(follow_id):
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
-
+    if g.user.id == follow_id:
+        flash("You Can't follow yourself Bud.", "warning")
+        return redirect(f"/users/{g.user.id}")
     followed_user = User.query.get_or_404(follow_id)
     g.user.following.append(followed_user)
     db.session.commit()
@@ -273,8 +275,10 @@ def like_message(msg_id):
         return redirect("/")
 
     msg = Message.query.get_or_404(msg_id)
+    #if msg is already liked, unlike it
     if msg in g.user.likes:
         g.user.likes.remove(msg)
+    #otherwise, like it
     else:
         g.user.likes.append(msg)
     db.session.commit()
