@@ -132,6 +132,7 @@ class UserViewTestCase(TestCase):
             self.assertEqual(len(u1.following), 0)
 
     def test_user_follow_route_redirects_unauthorized_users(self):
+        """if you're not logged in, can you follow someone?"""
         with self.client as c:
             with c.session_transaction() as sess:
                 #log out user if logged in
@@ -142,6 +143,8 @@ class UserViewTestCase(TestCase):
             self.assertEqual(resp.status_code, 302)
 
     def test_user_stop_follow_route_works(self):
+        """if you're following someone, does posting to the stop follow
+        route make you stop following them?"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -163,6 +166,7 @@ class UserViewTestCase(TestCase):
             self.assertEqual(len(u2.followers), 0)
 
     def test_user_stop_follow_route_redirects_unauthorized_users(self):
+        """if you're not logged in, can you stop following someone?"""
         with self.client as c:
             with c.session_transaction() as sess:
                 #log out user if logged in
@@ -299,6 +303,7 @@ class UserAuthenticationViewsTestCase(TestCase):
         self.u1_info["id"] = testuser.id
 
     def test_user_register(self):
+        """can a user regiester"""
         with self.client as c:
             resp = c.get(f'/signup')
             self.assertEqual(resp.status_code, 200)
@@ -309,6 +314,7 @@ class UserAuthenticationViewsTestCase(TestCase):
             self.assertIsNotNone(u)
 
     def test_user_login(self):
+        """can a user login"""
         with self.client as c:
             resp = c.get(f'/login')
             self.assertEqual(resp.status_code, 200)
@@ -319,6 +325,7 @@ class UserAuthenticationViewsTestCase(TestCase):
                 self.assertEqual(sess[CURR_USER_KEY], self.u1_info["id"])
 
     def test_user_logout(self):
+        """can a user logout"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_info["id"]
