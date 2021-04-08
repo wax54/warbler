@@ -11,6 +11,7 @@ like_views = Blueprint("like_routes", __name__)
 
 @like_views.route('/users/add_like/<int:msg_id>', methods=["GET", "POST"])
 def like_message(msg_id):
+    """Likes a message, or if the message is already liked, it unlikes it"""
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")

@@ -39,10 +39,14 @@
     </aside>
 
     <div class="col-lg-6 col-md-8 col-sm-12">
+      {% if messages %}
       <ul class="list-group" id="messages">
         {% for msg in messages %}
           {% include 'messages/card.html' %}
         {% endfor %}
+      {% else %}
+      <p>Nothing To Read Here, try <a href="/users">following</a> someone! </p>
+      {% endif %}
       </ul>
     </div>
 

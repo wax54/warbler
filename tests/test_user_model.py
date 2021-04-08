@@ -74,6 +74,7 @@ class UserModelTestCase(TestCase):
 
 
     def test_user_repr(self):
+        """Does the REPR look how we expect?"""
         u = User(
             email="test@test.com",
             username="testuser",
@@ -87,6 +88,7 @@ class UserModelTestCase(TestCase):
             u.__repr__(), f"<User #{id}: testuser, test@test.com>")
 
     def test_is_following(self):
+        """does the is following function return True if another user is being followed by the instance is following is being called on"""
         u = User(
             email="test@test.com",
             username="testuser",
@@ -108,6 +110,7 @@ class UserModelTestCase(TestCase):
         self.assertFalse(u.is_following(u2))
 
     def test_is_followed_by(self):
+        """does the is followed by function return True if a user is following the instance the method is being called on"""
         u = User(
             email="test@test.com",
             username="testuser",
@@ -129,6 +132,7 @@ class UserModelTestCase(TestCase):
         self.assertFalse(u.is_followed_by(u2))
 
     def test_update_from_serial(self):
+        """ test to make sure update from serial works as expected"""
         u = User(email="test@test.com",
                  username="testuser",
                  password="HASHED_PASSWORD",
@@ -161,6 +165,7 @@ class UserModelTestCase(TestCase):
         self.assertEqual(u.location, "Washington")
 
     def test_duplicate_user_signup_failure(self):
+        """If someone has the same username or email as the one being signed up, how does it fail on the model"""
         u_info = {
             "email": "test@test.com",
             "username": "testuser",
@@ -175,6 +180,7 @@ class UserModelTestCase(TestCase):
         self.assertRaises(IntegrityError, db.session.commit)
 
     def test_no_username_signup_failure(self):
+        """If the username field is blank, how does it fail on the model"""
         u_info = {
             "email": "test@test.com",
             "username": "",
@@ -216,6 +222,7 @@ class UserModelTestCase(TestCase):
         self.assertEqual(another_u.image_url, User.image_url.default.arg)
 
     def test_user_authenticate(self):
+        """Does user authenticate work as expected"""
         u_info = {
             "email": "test@test.com",
             "username": "testuser",

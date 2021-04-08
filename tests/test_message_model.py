@@ -68,6 +68,7 @@ class MessageModelTestCase(TestCase):
         self.assertEqual(m.user, u)
 
     def test_message_repr(self):
+        """Does the REPR look how we expect"""
         m = Message(
             text="Test Message",
             user_id=self.u_id
