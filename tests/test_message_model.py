@@ -6,7 +6,9 @@
 import os
 from unittest import TestCase
 
-from models import db, User, Message, Follows
+from db_setup import connect_db, db
+from users.models import User, Follow
+from messages.models import Message
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -35,7 +37,7 @@ class MessageModelTestCase(TestCase):
         db.session.rollback()
         User.query.delete()
         Message.query.delete()
-        Follows.query.delete()
+        Follow.query.delete()
         u = User(
             email="test@test.com",
             username="testuser",

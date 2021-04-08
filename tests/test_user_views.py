@@ -8,7 +8,9 @@ from app import CURR_USER_KEY, app
 import os
 from unittest import TestCase
 
-from models import Message, User, connect_db, db
+from db_setup import connect_db, db
+from users.models import User
+from messages.models import Message
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this

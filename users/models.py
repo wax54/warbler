@@ -1,15 +1,11 @@
-"""SQLAlchemy models for Warbler."""
-
-from datetime import datetime
 
 from flask_bcrypt import Bcrypt
-from flask_sqlalchemy import SQLAlchemy
-
+from db_setup import db
+from likes.models import Like
 bcrypt = Bcrypt()
-db = SQLAlchemy()
 
 
-class Follows(db.Model):
+class Follow(db.Model):
     """Connection of a follower <-> followed_user."""
 
     __tablename__ = 'follows'
@@ -24,28 +20,6 @@ class Follows(db.Model):
         db.Integer,
         db.ForeignKey('users.id', ondelete="cascade"),
         primary_key=True,
-    )
-
-
-class Likes(db.Model):
-    """Mapping user likes to warbles."""
-
-    __tablename__ = 'likes' 
-
-    id = db.Column(
-        db.Integer,
-        primary_key=True
-    )
-
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey('users.id', ondelete='cascade')
-    )
-
-    message_id = db.Column(
-        db.Integer,
-        db.ForeignKey('messages.id', ondelete='cascade'),
-        unique=True
     )
 
 
@@ -99,15 +73,15 @@ class User(db.Model):
     followers = db.relationship(
         "User",
         secondary="follows",
-        primaryjoin=(Follows.user_being_followed_id == id),
-        secondaryjoin=(Follows.user_following_id == id)
+        primaryjoin=(Follow.user_being_followed_id == id),
+        secondaryjoin=(Follow.user_following_id == id)
     )
 
     following = db.relationship(
         "User",
         secondary="follows",
-        primaryjoin=(Follows.user_following_id == id),
-        secondaryjoin=(Follows.user_being_followed_id == id)
+        primaryjoin=(Follow.user_following_id == id),
+        secondaryjoin=(Follow.user_being_followed_id == id)
     )
 
     likes = db.relationship(
@@ -121,31 +95,33 @@ class User(db.Model):
     def is_followed_by(self, other_user):
         """Is this user followed by `other_user`?"""
 
-        found_user_list = [user for user in self.followers if user == other_user]
+        found_user_list = [
+            user for user in self.followers if user == other_user]
         return len(found_user_list) == 1
 
     def is_following(self, other_user):
         """Is this user following `other_use`?"""
 
-        found_user_list = [user for user in self.following if user == other_user]
+        found_user_list = [
+            user for user in self.following if user == other_user]
         return len(found_user_list) == 1
-    
+
     def update_from_serial(self, d):
         username = d.get('username')
-        
+
         email = d.get('email')
-        
+
         image_url = d.get('image_url')
         if image_url == '':
             image_url = User.image_url.default.arg
-            
+
         header_image_url = d.get('header_image_url')
         if header_image_url == '':
             header_image_url = User.header_image_url.default.arg
-            
+
         bio = d.get('bio')
         location = d.get('location')
-    
+
         if username:
             self.username = username
         if email:
@@ -158,9 +134,7 @@ class User(db.Model):
             self.bio = bio
         if location:
             self.location = location
-        
-        
-        
+
     @classmethod
     def signup(cls, username, email, password, image_url):
         """Sign up user.
@@ -199,47 +173,3 @@ class User(db.Model):
                 return user
 
         return False
-
-
-class Message(db.Model):
-    """An individual message ("warble")."""
-
-    __tablename__ = 'messages'
-
-    id = db.Column(
-        db.Integer,
-        primary_key=True,
-    )
-
-    text = db.Column(
-        db.String(140),
-        nullable=False,
-    )
-
-    timestamp = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=datetime.utcnow(),
-    )
-
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey('users.id', ondelete='CASCADE'),
-        nullable=False,
-    )
-
-    user = db.relationship('User')
-    
-    def __repr__(self):
-        return f"<Message #{self.id}: u_id={self.user_id}>"
-
-
-
-def connect_db(app):
-    """Connect this database to provided Flask app.
-
-    You should call this in your Flask app.
-    """
-
-    db.app = app
-    db.init_app(app)
