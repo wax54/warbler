@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, flash, g, request, url_f
 from db_setup import db
 from users.models import User
 from users.forms import UserEditForm
+from users.auth_routes import do_logout
 
 from messages.models import Message
 
