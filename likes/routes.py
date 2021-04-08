@@ -1,5 +1,7 @@
 from flask import Blueprint, redirect, render_template, g
 
+from messages.models import Message
+from db_setup import db
 
 like_views = Blueprint("like_routes", __name__)
 

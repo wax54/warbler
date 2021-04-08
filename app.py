@@ -14,6 +14,7 @@ from users.auth_routes import auth_views, CURR_USER_KEY
 from users.models import User, Follow
 from users.forms import LoginForm
 
+from messages.routes import Message
 from messages.routes import message_views
 
 from likes.routes import like_views
@@ -66,6 +67,7 @@ def homepage():
     - logged in: 100 most recent messages of followed_users
     """
 
+    print("##########################", g.user)
     if g.user:
         # an array of all the Id's of users who's messages should be shown
         following_ids = [glob[0] for glob in (db.session
