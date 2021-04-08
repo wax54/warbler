@@ -4,7 +4,6 @@
 #
 #    FLASK_ENV=production python -m unittest test_user_views.py
 
-from app import CURR_USER_KEY, app
 import os
 from unittest import TestCase
 
@@ -22,6 +21,7 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
 
 # Now we can import app
 
+from app import CURR_USER_KEY, app
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data
 # and create fresh new clean test data
