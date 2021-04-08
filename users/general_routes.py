@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, flash, g
+from flask import Blueprint, render_template, redirect, flash, g, request
 from db_setup import db
 from users.models import User
 from users.forms import UserEditForm

@@ -8,7 +8,9 @@ from forms import UserAddForm, UserEditForm, LoginForm, MessageForm
 from db_setup import db, connect_db
 
 
-from users.routes import user_views
+from users.general_routes import user_views
+from users.auth_routes import auth_views, CURR_USER_KEY
+
 from users.models import User, Follow
 from users.forms import LoginForm
 
@@ -16,8 +18,6 @@ from messages.routes import message_views
 
 from likes.routes import like_views
 
-
-CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
 
@@ -37,6 +37,7 @@ connect_db(app)
 app.register_blueprint(user_views)
 app.register_blueprint(message_views)
 app.register_blueprint(like_views)
+app.register_blueprint(auth_views)
 
 
 ##############################################################################
@@ -52,84 +53,6 @@ def add_user_to_g():
 
     else:
         g.user = None
-
-
-def do_login(user):
-    """Log in user."""
-
-    session[CURR_USER_KEY] = user.id
-
-
-def do_logout():
-    """Logout user."""
-
-    if CURR_USER_KEY in session:
-        del session[CURR_USER_KEY]
-
-
-@app.route('/signup', methods=["GET", "POST"])
-def signup():
-    """Handle user signup.
-
-    Create new user and add to DB. Redirect to home page.
-
-    If form not valid, present form.
-
-    If the there already is a user with that username: flash message
-    and re-present form.
-    """
-
-    form = UserAddForm()
-
-    if form.validate_on_submit():
-        try:
-            user = User.signup(
-                username=form.username.data,
-                password=form.password.data,
-                email=form.email.data,
-                image_url=form.image_url.data or User.image_url.default.arg,
-            )
-            db.session.commit()
-
-        except IntegrityError:
-            flash("Username or email already taken", 'danger')
-            return render_template('users/signup.html', form=form)
-
-        do_login(user)
-
-        return redirect("/")
-
-    else:
-        return render_template('users/signup.html', form=form)
-
-
-@app.route('/login', methods=["GET", "POST"])
-def login():
-    """Handle user login."""
-
-    form = LoginForm()
-
-    if form.validate_on_submit():
-        user = User.authenticate(form.username.data,
-                                 form.password.data)
-
-        if user:
-            do_login(user)
-            flash(f"Hello, {user.username}!", "success")
-            return redirect("/")
-
-        flash("Invalid credentials.", 'danger')
-
-    return render_template('users/login.html', form=form)
-
-
-@app.route('/logout')
-def logout():
-    """Handle logout of user."""
-    do_logout()
-    flash("User Logged Out!")
-    return redirect('/login')
-
 
 ##############################################################################
 # Homepage and error pages
